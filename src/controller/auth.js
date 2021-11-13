@@ -1,50 +1,46 @@
 const models = require("../models");
 const { signAccessToken } = require("../middlewares/jwt");
 const { generatePassword } = require("../utils/commonFunctions");
+const createError = require("http-errors");
 
 module.exports = {
+
+
   login: async (req, res, next) => {
-    res.status(200).json({
-      message: await signAccessToken("1", process.env.USER_ACCESS_TOKEN_SECRET)
-    })
-  },
-
-
-  signup: async (req, res, next) => {
     const body = req.body;
-    let image, response;
-
     try {
-      const found = await models.User.findOne({
+
+      console.log(body.userName);
+
+      if ((body.userName || body.password) === undefined)
+        throw createError.BadRequest("body not found")
+
+      const result = await models.Vendor.findOne({
         where: {
-          [Op.or]: [
-            {
-              userName: body.userName,
-            },
-            {
-              emailId: body.emailId,
-            },
-          ],
+          userName: body?.userName
         },
       });
 
-      if (found)
-        throw createError.Conflict("Email Or Username Already Exist !");
 
-      if (req.file) {
-        image = req.file.path;
-        response = await upload(image);
+      if (!result) {
+        throw createError.Unauthorized("invalid username/password");
       }
+      // const comparedPass = await bcrypt.compare(body.password, result.password);
 
-      const result = await models.User.create({
-        ...body,
-        profileImageUrl: image ? response.url : null,
-      });
+      // if (!comparedPass)
+      //   throw createError.Unauthorized("invalid username/password");
 
-      res.status(201).json({ status: "success", result, found });
+      if (body.password !== result.password)
+        throw createError.Unauthorized("invalid username/password");
+
+      const token = await signAccessToken(
+        JSON.stringify(result.id),
+        process.env.USER_ACCESS_TOKEN_SECRET
+      );
+
+      res.status(200).json({ status: "success", token });
     } catch (error) {
       next(error);
-      // console.log(error);
     }
   },
 
