@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer')
 
-const sendEmail = async () => {
+const sendEmail = async ({ body, subject }) => {
     console.log('sendEmail sendEmail');
 
     let transport = nodemailer.createTransport({
@@ -12,14 +12,14 @@ const sendEmail = async () => {
     });
     const message = {
         from: "sagaryc111@gmail.com",
-        to: "bendreajay007@gmail.com",
-        subject: "New Passengers and Goods Report",
+        to: "rahulvpakhare@gmail.com",
+        subject: subject,
         text: "Hello there!  Here I am attaching excel report for Sales Progress! PFA.",
-        html: 'content',
+        html: body
     };
     transport.sendMail(message, function (err, info) {
         if (err) {
-            console.log('Errpr Email',err)
+            console.log('Errpr Email', err)
             return false;
         } else {
             console.log('Success')
